@@ -1,7 +1,7 @@
 @IsTest
 private class SponsorLogicTest {
     @TestSetup
-    static void Setup() {
+    static void setup() {
         CAMPX__Sponsor__c testSponsor = new CAMPX__Sponsor__c(
         	Name = 'Test Sponsor Update Error',
             CAMPX__Email__c = 'Test@Test.com',
@@ -42,7 +42,7 @@ private class SponsorLogicTest {
         Try {
             insert testSponsor;
         } catch (Exception e) {
-            system.assertEquals(true, e.getMessage().contains('A sponsor can not be created without an email address'));
+            system.assertEquals(true, e.getMessage().contains('A sponsor can not be created without an email address'), 'Error is successfully thrown');
         }
     }
     @IsTest
@@ -120,7 +120,7 @@ private class SponsorLogicTest {
             insert nullEvent;
         } Catch(Exception e) {
             System.debug(e.getMessage());
-            System.assertEquals(true, e.getMessage().contains('A Sponsor must be associated with an event before being Accepted.'));
+            System.assertEquals(true, e.getMessage().contains('A Sponsor must be associated with an event before being Accepted.'), 'Error is successfully thrown');
         }
         Test.stopTest();
     }
@@ -138,7 +138,7 @@ private class SponsorLogicTest {
         try {
             update testSponsor;
         } catch(Exception e) {
-            System.assertEquals(true, e.getMessage().contains('A Sponsor must be associated with an event before being Accepted.'));
+            System.assertEquals(true, e.getMessage().contains('A Sponsor must be associated with an event before being Accepted.'), 'Error is successfully thrown');
         }
         Test.stopTest();
     }
