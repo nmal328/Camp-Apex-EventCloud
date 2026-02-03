@@ -4,7 +4,7 @@ trigger CampxSponsorTrigger on CAMPX__Sponsor__c (before insert, before update, 
     //Fires before insert or update methods
     if(trigger.isBefore) {
         if(trigger.isInsert) handler.beforeInsert(trigger.new);
-        if(trigger.isUpdate) handler.beforeUpdate(trigger.new, trigger.old);
+        if(trigger.isUpdate) handler.beforeUpdate(trigger.newMap, trigger.oldMap);
     }
     
     //Fires after insert or update methods

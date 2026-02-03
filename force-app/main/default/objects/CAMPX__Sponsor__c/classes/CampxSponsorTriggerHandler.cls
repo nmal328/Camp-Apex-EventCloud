@@ -2,40 +2,48 @@ public class CampxSponsorTriggerHandler {
     
     //Handles before insert operations 
     public void beforeInsert(List<CAMPX__Sponsor__c> newSponsors) {
-        
-        for (CAMPX__Sponsor__c sponsor : newSponsors) {
-            if(sponsor.CAMPX__Status__c == null) {
-                sponsor.CAMPX__Status__c = 'Pending';
-            }
-            if(sponsor.CAMPX__Email__c == null) {
-            	sponsor.addError('A sponsor can not be created without an email address');
-            }
-            if(sponsor.CAMPX__ContributionAmount__c == null) sponsor.CAMPX__Tier__c = null;
-            else if(sponsor.CAMPX__ContributionAmount__c == 0) sponsor.CAMPX__Tier__c = null;
-            else if(sponsor.CAMPX__ContributionAmount__c > 0 && sponsor.CAMPX__ContributionAmount__c < 1000) sponsor.CAMPX__Tier__c = 'Bronze';
-            else if(sponsor.CAMPX__ContributionAmount__c >= 1000 && sponsor.CAMPX__ContributionAmount__c < 5000) sponsor.CAMPX__Tier__c = 'Silver';
-            else if(sponsor.CAMPX__ContributionAmount__c >= 5000) sponsor.CAMPX__Tier__c = 'Gold';
-            if(sponsor.CAMPX__Event__c == null && sponsor.CAMPX__Status__c == 'Accepted') sponsor.addError('A Sponsor must be associated with an event before being Accepted.');
+    	List<CAMPX__Sponsor__c> nullStatusList = new List<CAMPX__Sponsor__c>();
+        List<CAMPX__Sponsor__c> emailErrorList = new List<CAMPX__Sponsor__c>();
+        List<CAMPX__Sponsor__c> eventErrorList = new List<CAMPX__Sponsor__c>();
+        for(CAMPX__Sponsor__c sponsor : newSponsors) {
+            if(sponsor.CAMPX__Status__c == null) nullStatusList.add(sponsor);
+            if(sponsor.CAMPX__Email__c == null) emailErrorList.add(sponsor);
+            if(sponsor.CAMPX__Event__c == null && sponsor.CAMPX__Status__c == 'Accepted') eventErrorList.add(sponsor);
         }
+    	//User Story 3
+        SponsorFieldUpdateLogic.nullStatusBeforeInsert(nullStatusList);
+        //User Story 4
+        SponsorErrorLogic.nullEmailError(emailErrorList);
+        //User Story 5 inserts
+        SponsorFieldUpdateLogic.contributionAmountBeforeInsert(newSponsors);
+        //User Story 6 inserts
+        SponsorErrorLogic.nullEventErrorBeforeInsert(eventErrorList);
     }
     
     //Handles before update operations
-    public void beforeUpdate(List<CAMPX__Sponsor__c> newSponsors, List<CAMPX__Sponsor__c> oldSponsors) {
-        for(Integer i = 0; i < newSponsors.size(); i++) {
-            if(newSponsors[i].CAMPX__Tier__c != oldSponsors[i].CAMPX__Tier__c) {
-                if(newSponsors[i].CAMPX__ContributionAmount__c == null) newSponsors[i].CAMPX__Tier__c = null;
-                else if(newSponsors[i].CAMPX__ContributionAmount__c == 0) newSponsors[i].CAMPX__Tier__c = null;
-                else if(newSponsors[i].CAMPX__ContributionAmount__c > 0 && newSponsors[i].CAMPX__ContributionAmount__c < 1000) newSponsors[i].CAMPX__Tier__c = 'Bronze';
-                else if(newSponsors[i].CAMPX__ContributionAmount__c >= 1000 && newSponsors[i].CAMPX__ContributionAmount__c < 5000) newSponsors[i].CAMPX__Tier__c = 'Silver';
-                else if(newSponsors[i].CAMPX__ContributionAmount__c >= 5000) newSponsors[i].CAMPX__Tier__c = 'Gold';
-            }
-            if(newSponsors[i].CAMPX__Status__c == 'Accepted' && oldSponsors[i].CAMPX__Status__c != 'Accepted' && newSponsors[i].CAMPX__Event__c == null) newSponsors[i].addError('A Sponsor must be associated with an event before being Accepted.');
+    public void beforeUpdate(Map<Id, CAMPX__Sponsor__c> newSponsorMap, Map<Id, CAMPX__Sponsor__c> oldSponsorMap) {
+        List<CAMPX__Sponsor__c> contributionChangeSponsors = new List<CAMPX__Sponsor__c>();
+        List<CAMPX__Sponsor__c> throwErrorSponsors = new List<CAMPX__Sponsor__c>();
+        for(CAMPX__Sponsor__c newSponsor : newSponsorMap.values()) {
+            CAMPX__Sponsor__c oldSponsor = oldSponsorMap.get(newSponsor.Id);
+            
+            //User Story 5 updates
+            //
+            if(newSponsor.CAMPX__ContributionAmount__c != oldSponsor.CAMPX__ContributionAmount__c) contributionChangeSponsors.add(newSponsor);
+            
+            //User Story 6 updates
+            if(newSponsor.CAMPX__Status__c == 'Accepted' && oldSponsor.CAMPX__Status__c != 'Accepted' &&
+               newSponsor.CAMPX__Event__c == null) throwErrorSponsors.add(newSponsor);
         }
+        
+        if(!contributionChangeSponsors.isEmpty()) SponsorFieldUpdateLogic.contributionAmountBeforeInsert(contributionChangeSponsors);
+        if(!throwErrorSponsors.isEmpty()) SponsorErrorLogic.nullEventErrorBeforeInsert(throwErrorSponsors);
     }
     
     //Handles after insert operations
     public void afterInsert(List<CAMPX__Sponsor__c> newSponsors) {
         Map<Id, Decimal> eventRevenueAdjustments = new Map<Id, Decimal>();
+        //User Story 7 inserts
         for(CAMPX__Sponsor__c sponsor : newSponsors) {
             if(sponsor.CAMPX__Status__c == 'Accepted') {
                 Decimal contribution = sponsor.CAMPX__ContributionAmount__c;
@@ -65,6 +73,7 @@ public class CampxSponsorTriggerHandler {
     public void afterUpdate(List<CAMPX__Sponsor__c> newSponsors, List<CAMPX__Sponsor__c> oldSponsors) {
         Map<Id, Decimal> eventRevenueAdjustments = new Map<Id, Decimal>();
         for(Integer i = 0; i < newSponsors.size(); i++) {
+            //User Story 7 updates
             if(newSponsors[i].CAMPX__Status__c == 'Accepted' && oldSponsors[i].CAMPX__Status__c != 'Accepted') {
                 Decimal contribution = newSponsors[i].CAMPX__ContributionAmount__c;
                 Id eventId = newSponsors[i].CAMPX__Event__c;
@@ -95,5 +104,7 @@ public class CampxSponsorTriggerHandler {
             }
             update eventsToUpdate;
         }
+        //User Story 8 updates
+        
     }
 }
