@@ -1,7 +1,7 @@
 public class CampxSponsorTriggerHandler {
     
     //Handles before insert operations 
-    public void beforeInsert(List<CAMPX__Sponsor__c> newSponsors) {
+    public static void beforeInsert(List<CAMPX__Sponsor__c> newSponsors) {
     	List<CAMPX__Sponsor__c> nullStatusList = new List<CAMPX__Sponsor__c>();
         List<CAMPX__Sponsor__c> emailErrorList = new List<CAMPX__Sponsor__c>();
         List<CAMPX__Sponsor__c> eventErrorList = new List<CAMPX__Sponsor__c>();
@@ -21,7 +21,7 @@ public class CampxSponsorTriggerHandler {
     }
     
     //Handles before update operations
-    public void beforeUpdate(Map<Id, CAMPX__Sponsor__c> newSponsorMap, Map<Id, CAMPX__Sponsor__c> oldSponsorMap) {
+    public static void beforeUpdate(Map<Id, CAMPX__Sponsor__c> newSponsorMap, Map<Id, CAMPX__Sponsor__c> oldSponsorMap) {
         List<CAMPX__Sponsor__c> contributionChangeSponsors = new List<CAMPX__Sponsor__c>();
         List<CAMPX__Sponsor__c> throwErrorSponsors = new List<CAMPX__Sponsor__c>();
         for(CAMPX__Sponsor__c newSponsor : newSponsorMap.values()) {
@@ -42,35 +42,13 @@ public class CampxSponsorTriggerHandler {
     
     //Handles after insert operations
     public void afterInsert(List<CAMPX__Sponsor__c> newSponsors) {
-        Map<Id, Decimal> eventRevenueAdjustments = new Map<Id, Decimal>();
+        
         //User Story 7 inserts
-        for(CAMPX__Sponsor__c sponsor : newSponsors) {
-            if(sponsor.CAMPX__Status__c == 'Accepted') {
-                Decimal contribution = sponsor.CAMPX__ContributionAmount__c;
-                Id eventId = sponsor.CAMPX__Event__c;
-                if(!eventRevenueAdjustments.containsKey(eventId)) {
-                    eventRevenueAdjustments.put(eventId, 0);
-                }
-                eventRevenueAdjustments.put(eventId, eventRevenueAdjustments.get(eventId) + contribution);
-            }
-        }
-        if(!eventRevenueAdjustments.isEmpty()) {
-            List<CAMPX__Event__c> eventsToUpdate = [
-                SELECT Id, CAMPX__GrossRevenue__c
-                FROM CAMPX__Event__c
-                WHERE Id in :eventRevenueAdjustments.keySet()
-            ];
-            for(CAMPX__Event__c event : eventsToUpdate) {
-                Decimal adjustment = eventRevenueAdjustments.get(event.Id);
-                if(event.CAMPX__GrossRevenue__c == null) event.CAMPX__GrossRevenue__c = 0;
-                event.CAMPX__GrossRevenue__c += adjustment;
-            }
-            update eventsToUpdate;
-        }
+        SponsorFieldUpdateLogic.eventRevenueUpdateAfterInsert(newSponsors);
     }
     
     //Handles after update operations
-    public void afterUpdate(List<CAMPX__Sponsor__c> newSponsors, List<CAMPX__Sponsor__c> oldSponsors) {
+    public static void afterUpdate(List<CAMPX__Sponsor__c> newSponsors, List<CAMPX__Sponsor__c> oldSponsors) {
         Map<Id, Decimal> eventRevenueAdjustments = new Map<Id, Decimal>();
         for(Integer i = 0; i < newSponsors.size(); i++) {
             //User Story 7 updates
