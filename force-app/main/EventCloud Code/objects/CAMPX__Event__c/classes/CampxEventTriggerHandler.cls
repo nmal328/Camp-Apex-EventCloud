@@ -49,14 +49,4 @@ public class CampxEventTriggerHandler {
             EventFieldUpdateLogic.EventRevenueSetBefore(eventRevenueSetList);
         }
     }
-    
-    //Handles after insert operations
-    public static void afterInsert(List<CAMPX__Event__c> newEvents) {
-        //logic here
-    }
-                             
-    //Handles after update operations
-    public static void afterUpdate(List<CAMPX__Event__c> newEvents, List<CAMPX__Event__c> oldEvents) {
-        //logic here
-    }
 }
