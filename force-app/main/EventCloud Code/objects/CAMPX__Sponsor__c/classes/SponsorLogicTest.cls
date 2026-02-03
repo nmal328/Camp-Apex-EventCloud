@@ -31,6 +31,7 @@ private class SponsorLogicTest {
         System.assertEquals('Pending', insertedSponsor.CAMPX__Status__c, 'When a Sponsor is inserted with a null status, it get\'s changed to Pending');
     }
     @IsTest
+    //This should really be in its own test class
     static void nullEmailTest() {
         CAMPX__Sponsor__c testSponsor = new CAMPX__Sponsor__c(
         	Name = 'Test Sponsor',
@@ -105,6 +106,7 @@ private class SponsorLogicTest {
         System.assertEquals('Gold', goldTierUpdated.CAMPX__Tier__c, 'A 5500 contribution amount will mean a Gold tier');
     }
     @IsTest
+    //This should really be in its own test class
     static void nullEventTest() {
         CAMPX__Sponsor__c nullEvent = new CAMPX__Sponsor__c(
         	Name = 'Test Sponsor',
@@ -123,6 +125,7 @@ private class SponsorLogicTest {
         Test.stopTest();
     }
     @IsTest
+    //This should really be in its own test class
     static void sponsorStatusUpdateErrorTest() {
         CAMPX__Sponsor__c testSponsor = [
             SELECT Id, CAMPX__Status__c, Name
