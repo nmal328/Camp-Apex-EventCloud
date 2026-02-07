@@ -43,4 +43,40 @@ public class SponsorFieldUpdateLogic {
             }
         }
     }
+    public static void eventRevenueUpdateAfterUpdate(Map<Id, CAMPX__Sponsor__c> newSponsorMap, Map<Id, CAMPX__Sponsor__c> oldSponsorMap) {
+        Map<Id, Decimal> eventRevenueAdjustments = new Map<Id, Decimal>();
+        for(CAMPX__Sponsor__c newSponsor : newSponsorMap) {
+            CAMPX__Sponsor__c oldSponsor = oldSponsorMap.get(newSponsor.Id);
+            //User Story 7 updates
+            if(newSponsor.CAMPX__Status__c == 'Accepted' && oldSponsor.CAMPX__Status__c != 'Accepted') {
+                Decimal contribution = newSponsors[i].CAMPX__ContributionAmount__c;
+                Id eventId = newSponsors[i].CAMPX__Event__c;
+                if(!eventRevenueAdjustments.containsKey(eventId)) {
+                    eventRevenueAdjustments.put(eventId, 0);
+                }
+             	eventRevenueAdjustments.put(eventId, eventRevenueAdjustments.get(eventId) + contribution);
+            }
+            else if((newSponsors[i].CAMPX__Status__c != 'Accepted' && oldSponsors[i].CAMPX__Status__c == 'Accepted') || (newSponsors[i].CAMPX__Event__c == null && oldSponsors[i].CAMPX__Event__c != null)) {
+                Decimal deduction = oldSponsors[i].CAMPX__ContributionAmount__c;
+                Id eventId = oldSponsors[i].CAMPX__Event__c;
+                if(!eventRevenueAdjustments.containsKey(eventId)) {
+                    eventRevenueAdjustments.put(eventId, 0);
+                }
+                eventRevenueAdjustments.put(eventId, eventRevenueAdjustments.get(eventId) - deduction);
+            }
+        }
+        if(!eventRevenueAdjustments.isEmpty()) {
+            List<CAMPX__Event__c> eventsToUpdate = [
+                SELECT Id, CAMPX__GrossRevenue__c
+                FROM CAMPX__Event__c
+                WHERE Id in :eventRevenueAdjustments.keySet()
+            ];
+            for(CAMPX__Event__c event : eventsToUpdate) {
+                Decimal adjustment = eventRevenueAdjustments.get(event.Id);
+                if(event.CAMPX__GrossRevenue__c == null) event.CAMPX__GrossRevenue__c = 0;
+                event.CAMPX__GrossRevenue__c += adjustment;
+            }
+            update eventsToUpdate;
+        }
+    }
 }
