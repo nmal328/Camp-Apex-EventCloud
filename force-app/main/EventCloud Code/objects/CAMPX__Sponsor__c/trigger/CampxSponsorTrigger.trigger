@@ -9,6 +9,6 @@ trigger CampxSponsorTrigger on CAMPX__Sponsor__c (before insert, before update, 
     //Fires after insert or update methods
     if(trigger.isAfter) {
         if(trigger.isInsert) CampxSponsorTriggerHandler.afterInsert(trigger.new);
-        if(trigger.isUpdate) CampxSponsorTriggerHandler.afterUpdate(trigger.new, trigger.old);
+        if(trigger.isUpdate) CampxSponsorTriggerHandler.afterUpdate(trigger.newMap, trigger.oldMap);
     }
 }
